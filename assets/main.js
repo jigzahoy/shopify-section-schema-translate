@@ -1,23 +1,64 @@
-import './style.css'
-import { setupCounter } from './counter.js'
+import Alpine from "alpinejs";
+import { shopifySchemaTranslate } from "../src/shopifySchemaTranslate";
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${''}" class="logo" alt="Vite logo" />
-    </a>
-    asdasd
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${''}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+window.Alpine = Alpine;
 
-setupCounter(document.querySelector('#counter'))
+const initialValue = `{
+  "name": "Slideshow",
+  "tag": "section",
+  "class": "slideshow",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header 1"
+    },
+    {
+      "type": "paragraph",
+      "content": "This section will display your brand information."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "Show announcement",
+      "default": true
+    }
+  ]
+}`;
+
+Alpine.data("RootApp", () => ({
+  inputSchema: initialValue,
+
+  results() {
+    try {
+      if (!this.inputSchema) return "";
+      const schema = JSON.parse(this.inputSchema);
+
+      const jsonConverted = shopifySchemaTranslate(schema);
+
+      return jsonConverted;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  get schemaResults() {
+    try {
+      return JSON.stringify(this.results()[0], null, 2) || "";
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  },
+
+  get translatedResults() {
+    try {
+      return JSON.stringify(this.results()[1], null, 2) || "";
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  },
+}));
+
+Alpine.start();
