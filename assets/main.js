@@ -1,33 +1,19 @@
 import Alpine from "alpinejs";
 import { shopifySchemaTranslate } from "../src/shopifySchemaTranslate";
+import { initialValue } from "./sampleData";
+import hljs from "highlight.js/lib/core";
+import json from "highlight.js/lib/languages/json";
+
+import "highlight.js/styles/atom-one-dark.css";
 
 window.Alpine = Alpine;
 
-const initialValue = `{
-  "name": "Slideshow",
-  "tag": "section",
-  "class": "slideshow",
-  "limit": 1,
-  "settings": [
-    {
-      "type": "header",
-      "content": "Section Header 1"
-    },
-    {
-      "type": "paragraph",
-      "content": "This section will display your brand information."
-    },
-    {
-      "type": "checkbox",
-      "id": "show_announcement",
-      "label": "Show announcement",
-      "default": true
-    }
-  ]
-}`;
-
 Alpine.data("RootApp", () => ({
   inputSchema: initialValue,
+
+  init() {
+    hljs.registerLanguage("json", json);
+  },
 
   results() {
     try {
@@ -44,7 +30,8 @@ Alpine.data("RootApp", () => ({
 
   get schemaResults() {
     try {
-      return JSON.stringify(this.results()[0], null, 2) || "";
+      const resultsString = JSON.stringify(this.results()[0], null, 2) || "";
+      return hljs.highlight(resultsString, { language: "json" }).value;
     } catch (error) {
       console.error(error);
       return;
@@ -53,7 +40,8 @@ Alpine.data("RootApp", () => ({
 
   get translatedResults() {
     try {
-      return JSON.stringify(this.results()[1], null, 2) || "";
+      const resultsString = JSON.stringify(this.results()[1], null, 2) || "";
+      return hljs.highlight(resultsString, { language: "json" }).value;
     } catch (error) {
       console.error(error);
       return;
