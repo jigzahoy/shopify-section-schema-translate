@@ -69,7 +69,20 @@ const convertSectionSchemaToTranslationStrings = (schema, options = {}) => {
             });
           }),
         };
+      case "presets":
+        const [firstPreset, ...rest] = schema[curKey];
+        const { name, ...restFirst } = firstPreset;
 
+        return {
+          ...acc,
+          [curKey]: [
+            {
+              name: [...filteredTranslationRoot, curKey, "name"].join("."),
+              ...restFirst,
+            },
+            ...rest,
+          ],
+        };
       default:
         return { ...acc, [curKey]: schema[curKey] };
     }
@@ -109,6 +122,18 @@ const getSectionSchemaLocale = (object) => {
         };
       case "options":
         return { ...acc, ...getOptionsSettingsSchema(object[curKey], curKey) };
+
+      case "presets":
+        return {
+          ...acc,
+          [objectKey]: object[curKey].reduce((acc, cur, i) => {
+            if (i > 1) return { ...acc };
+            return {
+              ...acc,
+              name: cur?.name,
+            };
+          }, {}),
+        };
       default:
         return { ...acc };
     }
@@ -117,7 +142,12 @@ const getSectionSchemaLocale = (object) => {
 
 const getOptionsSettingsSchema = (obj, name) => {
   return obj.reduce((acc, cur, curIndex) => {
-    return { ...acc, [`${name}__${curIndex + 1}`]: cur?.label };
+    return {
+      ...acc,
+      [`${name}__${curIndex + 1}`]: {
+        label: cur?.label,
+      },
+    };
   }, {});
 };
 
