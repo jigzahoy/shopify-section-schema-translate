@@ -1,3 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "highlight.js/styles/atom-one-dark.css";
+
+html,
+body {
+  background-color: hsl(216deg 13.16% 14.9%);
+}
+
+.cm-editor {
+  #main-editor & {
+    height: 100%;
+  }
+
+  #locale-schema &,
+  #translated-schema & {
+    height: 100%;
+  }
+}
+
+.cm-wrap {
+  height: 100%;
+}
+
+.cm-scroller {
+  overflow: auto;
+}

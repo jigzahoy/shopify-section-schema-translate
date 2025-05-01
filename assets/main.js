@@ -1,52 +1,80 @@
-import Alpine from "alpinejs";
-import { shopifySchemaTranslate } from "../src/shopifySchemaTranslate";
+import { basicSetup, EditorView } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { json } from "@codemirror/lang-json";
+import { oneDark } from "@codemirror/theme-one-dark";
+
+import { shopifySchemaTranslate } from "../src/lib/shopify-section-schema-translate";
 import { initialValue } from "./sampleData";
-import hljs from "highlight.js/lib/core";
-import json from "highlight.js/lib/languages/json";
 
-import "highlight.js/styles/atom-one-dark.css";
+const [initialTranslated, initialLocale] = shopifySchemaTranslate(
+  JSON.parse(initialValue)
+);
 
-window.Alpine = Alpine;
+let localeEditor = new EditorView({
+  doc: JSON.stringify(initialLocale, null, 2),
+  extensions: [
+    basicSetup,
+    json(),
+    oneDark,
+    EditorState.readOnly.of(true),
+  ],
+  parent: document.querySelector("#locale-schema"),
+});
 
-Alpine.data("RootApp", () => ({
-  inputSchema: initialValue,
+let translatedEditor = new EditorView({
+  doc: JSON.stringify(initialTranslated, null, 2),
+  extensions: [
+    basicSetup,
+    json(),
+    oneDark,
+    EditorState.readOnly.of(true),
+  ],
+  parent: document.querySelector("#translated-schema"),
+});
 
-  init() {
-    hljs.registerLanguage("json", json);
-  },
+new EditorView({
+  doc: initialValue,
+  extensions: [
+    basicSetup,
+    json(),
+    oneDark,
+    EditorView.updateListener.of((view) => {
+      if (!view.docChanged) return;
 
-  results() {
-    try {
-      if (!this.inputSchema) return "";
-      const schema = JSON.parse(this.inputSchema);
+      const content = view.state.doc.toString();
+      updateView(content);
+    }),
+  ],
+  parent: document.querySelector("#main-editor"),
+});
 
-      const jsonConverted = shopifySchemaTranslate(schema);
+function updateView(content) {
+  let localeString = "";
+  let translatedString = "";
 
-      return jsonConverted;
-    } catch (error) {
-      console.error(error);
-    }
-  },
+  try {
+    const [translated, locale] = shopifySchemaTranslate(JSON.parse(content));
 
-  get schemaResults() {
-    try {
-      const resultsString = JSON.stringify(this.results()[0], null, 2) || "";
-      return hljs.highlight(resultsString, { language: "json" }).value;
-    } catch (error) {
-      console.error(error);
-      return;
-    }
-  },
+    localeString = JSON.stringify(locale, null, 2);
+    translatedString = JSON.stringify(translated, null, 2);
+  } catch (e) {
+    localeString = "Schema is not valid";
+    translatedString = "Schema is not valid";
+  } finally {
+    localeEditor.dispatch({
+      changes: {
+        from: 0,
+        to: localeEditor.state.doc.length,
+        insert: localeString,
+      },
+    });
 
-  get translatedResults() {
-    try {
-      const resultsString = JSON.stringify(this.results()[1], null, 2) || "";
-      return hljs.highlight(resultsString, { language: "json" }).value;
-    } catch (error) {
-      console.error(error);
-      return;
-    }
-  },
-}));
-
-Alpine.start();
+    translatedEditor.dispatch({
+      changes: {
+        from: 0,
+        to: translatedEditor.state.doc.length,
+        insert: translatedString,
+      },
+    });
+  }
+}
